@@ -1,17 +1,27 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <timeliner :data="timeliner"/>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Timeliner from './components/Timeliner.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    Timeliner
+  },
+
+  data () {
+    return {
+      width: 640,
+      height: 480,
+      name: 'Untitled',
+      shape: null,
+      frames: {},
+      timeliner: {}
+    }
   }
 }
 </script>
@@ -23,6 +33,5 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 </style>

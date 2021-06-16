@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "paper": "^0.12.15",
+    "timeliner": "github:shaunabanana/timeliner",
     "vue": "^2.6.11"
   },
   "devDependencies": {
