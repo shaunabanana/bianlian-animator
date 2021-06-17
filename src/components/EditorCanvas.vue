@@ -90,6 +90,13 @@ export default {
     },
 
     methods: {
+        reset () {
+            this.shapes.forEach( shape => { shape.remove() })
+            this.shapes = [];
+            this.isEditing = false;
+            this.hitResult = null;
+        },
+
         getLayerShape(layerId) {
             return this.shapes[layerId];
         },

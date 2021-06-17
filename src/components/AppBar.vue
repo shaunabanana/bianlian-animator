@@ -9,7 +9,7 @@
 
         <v-menu offset-y>
             <template v-slot:activator="{ on, attrs }">
-                <v-btn text v-bind="attrs" v-on="on"> Project </v-btn>
+                <v-btn text v-bind="attrs" v-on="on"> Animation </v-btn>
             </template>
             <v-list dense>
                 <v-list-item @click="newProject">
@@ -27,17 +27,22 @@
                     </v-list-item-content>
                 </v-list-item>
 
-                <v-list-item @click="newProject">
+                <v-list-item @click="openProject">
                     <v-list-item-icon>
                         <v-icon>mdi-folder-open</v-icon>
                     </v-list-item-icon>
                     <v-list-item-content>
                         <v-list-item-title> Open </v-list-item-title>
-                        <input class="hidden" type="file" id="open-project" />
+                        <input 
+                            class="hidden" 
+                            type="file" 
+                            id="open-project"
+                            @change="readJSON"
+                        />
                     </v-list-item-content>
                 </v-list-item>
 
-                <v-list-item @click="newProject">
+                <v-list-item @click="saveProject">
                     <v-list-item-icon>
                         <v-icon>mdi-content-save</v-icon>
                     </v-list-item-icon>
@@ -53,32 +58,8 @@
                 <v-btn text v-bind="attrs" v-on="on"> Keyframe </v-btn>
             </template>
             <v-list dense>
-                <v-list-item @click="newProject">
-                    <v-list-item-icon>
-                        <v-icon>mdi-new-box</v-icon>
-                    </v-list-item-icon>
-                    <v-list-item-content>
-                        <v-list-item-title> Load </v-list-item-title>
-                        <input
-                            class="hidden"
-                            type="file"
-                            id="new-project"
-                            @change="readSVG"
-                        />
-                    </v-list-item-content>
-                </v-list-item>
 
-                <v-list-item @click="newProject">
-                    <v-list-item-icon>
-                        <v-icon>mdi-folder-open</v-icon>
-                    </v-list-item-icon>
-                    <v-list-item-content>
-                        <v-list-item-title> Save </v-list-item-title>
-                        <input class="hidden" type="file" id="open-project" />
-                    </v-list-item-content>
-                </v-list-item>
-
-                <v-list-item @click="newProject">
+                <v-list-item @click="$emit('copy-face')">
                     <v-list-item-icon>
                         <v-icon>mdi-content-save</v-icon>
                     </v-list-item-icon>
@@ -87,7 +68,7 @@
                     </v-list-item-content>
                 </v-list-item>
 
-                <v-list-item @click="newProject">
+                <v-list-item @click="$emit('paste-face')">
                     <v-list-item-icon>
                         <v-icon>mdi-content-save</v-icon>
                     </v-list-item-icon>
@@ -96,7 +77,7 @@
                     </v-list-item-content>
                 </v-list-item>
 
-                <v-list-item @click="newProject">
+                <v-list-item @click="$emit('reset-face')">
                     <v-list-item-icon>
                         <v-icon>mdi-content-save</v-icon>
                     </v-list-item-icon>
@@ -126,12 +107,27 @@ export default {
             document.querySelector("input#open-project").click();
         },
 
+        saveProject() {
+            this.$emit('save-project');
+        },
+
         readSVG(event) {
             if (event.target.files.length < 1) return;
 
             let fileReader = new FileReader();
             fileReader.onload = function (event) {
                 this.$emit('new-project', event.target.result);
+            }.bind(this);
+            fileReader.readAsText(event.target.files[0]);
+
+        },
+
+        readJSON(event) {
+            if (event.target.files.length < 1) return;
+
+            let fileReader = new FileReader();
+            fileReader.onload = function (event) {
+                this.$emit('open-project', JSON.parse(event.target.result));
             }.bind(this);
             fileReader.readAsText(event.target.files[0]);
 

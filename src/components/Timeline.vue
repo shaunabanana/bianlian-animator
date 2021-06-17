@@ -8,6 +8,7 @@ export default {
     name: "Timeline",
     props: {
         layers: { type: Array, required: true },
+        focusCapture: { type: Boolean, default: false }
     },
     
     data () {
@@ -17,24 +18,49 @@ export default {
         }
     },
 
-    mounted() {
-        
+    watch: {
+        focusCapture () {
+            if (!this.timeliner) return;
+            this.timeliner.setFocusCapture(this.focusCapture);
+        }
     },
 
-    watch: {
-        layers(layers) {
-            console.log(layers);
+    methods: {
+        reset () {
             if (this.timeliner) this.timeliner.dispose();
+            this.timeliner = null;
+            this.data = null;
+        },
 
+        key (index) {
+            this.timeliner.fire('keyframe', index);
+        },
+
+        getData () {
+            return this.timeliner.getData();
+        },
+
+        setData (data) {
             this.data = {};
-            layers.forEach(layer => {
+            data.layers.forEach(layer => {
                 this.data[layer.name] = 0;
             });
-            console.log(this.data);
+            this.initTimeliner();
+            this.timeliner.load(data);
+            console.log(this.timeliner)
+        },
+
+        initTimeliner () {
+            if (this.timeliner) {
+                this.timeliner.dispose();
+                this.timeliner = null;
+            }
 
             // Initialize timeliner
             this.timeliner = new Timeliner(this.data);
-            layers.forEach(layer => {
+            document.querySelector('timeliner').id = "timeliner";
+
+            this.layers.forEach(layer => {
                 this.timeliner.addLayer(layer.name);
             });
 
@@ -55,16 +81,16 @@ export default {
             this.timeliner.on("keyframe.delete", (layerId, index) => {
                 this.$emit('unkey', layerId, index);
             });
-        },
-    },
-
-    methods: {
-        key (index) {
-            this.timeliner.fire('keyframe', index);
         }
     }
 };
 </script>
 
-<style scoped>
+<style>
+#timeliner select {
+    color: text;
+    background-color: -webkit-control-background;
+    box-sizing: border-box;
+    -webkit-appearance: menulist;
+}
 </style>
