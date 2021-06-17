@@ -3,7 +3,10 @@
         <app-bar :name="name"
             @new-project="newProject" 
             @open-project="openProject" 
-            @save-project="saveProject" 
+            @save-project="saveProject"
+            @copy-face="copyFace"
+            @paste-face="pasteFace"
+            @reset-face="resetFace"
         />
 
         <v-main>
@@ -74,7 +77,8 @@ export default {
         name: "Untitled",
         layers: [],
         background: "gray",
-        saveProjectDialogue: false
+        saveProjectDialogue: false,
+        clipboard: null,
     }),
 
     mounted() {},
@@ -182,6 +186,28 @@ export default {
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
             this.saveProjectDialogue = false;
+        },
+
+        copyFace () {
+            this.clipboard = this.layers.map( 
+                (layer, index) => this.$refs.editor.getLayerShape(index).pathData
+            );
+        },
+
+        pasteFace () {
+            if (this.clipboard) {
+                this.layers.forEach( (layer, index) => {
+                    this.$refs.editor.shapes[index].pathData = this.clipboard[index];
+                    this.$refs.timeline.key(index);
+                })
+            }
+        },
+
+        resetFace () {
+            this.layers.forEach( (layer, index) => {
+                this.$refs.editor.shapes[index].pathData = layer.shape;
+                this.$refs.timeline.key(index);
+            })
         },
 
         updateTime(time) {
