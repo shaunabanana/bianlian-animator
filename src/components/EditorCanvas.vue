@@ -1,25 +1,27 @@
 <template>
-    <canvas id="editor-canvas" hidpi="on">
+    <canvas id="editor-canvas" hidpi="on"
+        :style="{background: background}"
+    >
     </canvas>
 </template>
 
 <script>
 import { paper } from "paper";
-import toPath from "element-to-path";
 
 export default {
     name: "EditorCanvas",
     props: {
         layers: { type: Array, required: true },
         width: { type: Number, required: true},
-        height: { type: Number, required: true}
+        height: { type: Number, required: true},
+        background: { type: String, default: 'gray'}
     },
 
     data () {
         return {
             shapes: [],
             tool: null,
-            editing: false,
+            isEditing: false,
             hitResult: null,
             hitOptions: {
                 segments: true,
@@ -27,6 +29,25 @@ export default {
                 fill: true,
                 handles: true,
                 tolerance: 5
+            },
+            interShape: null,
+            fromShape: null,
+            toShape: null
+        }
+    },
+
+    computed: {
+        editing: {
+            get: function () {
+                return this.isEditing;
+            },
+            set: function (value) {
+                if (this.isEditing && !value) {
+                    const layerId = this.shapes.indexOf(this.hitResult.item);
+                    const svg = this.hitResult.item.exportSVG();
+                    this.$emit('update', layerId, svg.attributes['d'].value);
+                }
+                this.isEditing = value;
             }
         }
     },
@@ -43,57 +64,95 @@ export default {
         layers () {
             this.shapes = [];
             this.layers.forEach ( (layer, index) => {
-                const pathData = toPath(layer.shape);
-                const path = new paper.Path(pathData);
-                path.strokeColor = layer.shape.attributes['stroke'];
-                path.strokeWidth = layer.shape.attributes['stroke-width'];
+                const path = new paper.Path(layer.shape);
+                path.strokeColor = layer.attributes['stroke'];
+                path.strokeWidth = layer.attributes['stroke-width'];
                 this.shapes[index] = path;
             });
         }
     },
 
+    mounted () {
+        var canvas = document.getElementById('editor-canvas');
+        paper.setup(canvas);
+
+        // paper.view.onFrame = this.draw.bind(this);
+
+        this.tool = new paper.Tool();
+        this.tool.onMouseDown = this.onMouseDown.bind(this);
+        this.tool.onMouseUp = this.onMouseUp.bind(this);
+        this.tool.onMouseDrag = this.onMouseDrag.bind(this);
+
+        this.interShape = new paper.Path({insert: false});
+        this.fromShape = new paper.Path({insert: false});
+        this.toShape = new paper.Path({insert: false});
+        
+    },
+
     methods: {
+        getLayerShape(layerId) {
+            return this.shapes[layerId];
+        },
+
+        interpolate(layer, frame1, frame2, percentage) {
+            let keys = this.layers[layer].keys;
+
+            if (frame1 < 0) frame1 = 0;
+            if (frame1 > keys.length - 1) frame1 = keys.length - 1;
+            if (frame2 < 0) frame2 = 0;
+            if (frame2 > keys.length - 1) frame2 = keys.length - 1;
+
+            if (keys.length === 0) {
+                this.interShape.pathData = this.layers[layer].shape;
+                return this.interShape;
+            } else if (frame1 === frame2) {
+                this.interShape.pathData = keys[frame1];
+                return this.interShape;
+            } else {
+                this.fromShape.pathData = keys[frame1];
+                this.toShape.pathData = keys[frame2];
+                this.interShape.interpolate(this.fromShape, this.toShape, percentage);
+                return this.interShape;
+            }
+        },
+
+        pathify(shape) {
+            return shape.exportSVG().attributes['d'].value;
+        },
+
         draw () {
-            this.layers.forEach ( (layer) => {
+            this.layers.forEach ( (layer, layerId) => {
                 if (layer.time) {
-                    //
+                    const shape = this.interpolate(
+                        layerId, 
+                        layer.time.start, layer.time.end, 
+                        layer.time.percentage
+                    );
+                    this.shapes[layerId].pathData = shape.pathData;
                 }
             })
             paper.view.draw();
-        }
-    },
+        },
 
-    mounted () {
-        // paper.install(window);
-        var canvas = document.getElementById('editor-canvas');
-        console.log(canvas);
-        paper.setup(canvas);
-
-        paper.view.onFrame = this.draw.bind(this);
-
-        this.tool = new paper.Tool();
-        this.tool.onMouseDown = (event) => {
-            console.log(event);
+        onMouseDown (event) {
             this.hitResult = paper.project.hitTest(event.point, this.hitOptions);
             this.shapes.forEach( shape => { shape.fullySelected = false });
             if (this.hitResult) {
                 this.hitResult.item.fullySelected = true;
             }
-        }
+        },
 
-        this.tool.onMouseUp = (event) => {
-            console.log(event);
+        onMouseUp () {
             this.editing = false;
             if (this.hitResult) {
                 // this.hitResult.item.onChange();
                 this.hitResult = null;
             }
-        }
+        },
 
-        this.tool.onMouseDrag = (event) => {
-            this.editing = true;
+        onMouseDrag (event) {
             if (this.hitResult) {
-                console.log(this.hitResult.type);
+                this.editing = true;
                 if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
                     let item = this.hitResult.item;
                     item.position.x += event.delta.x;
@@ -123,7 +182,6 @@ export default {
                 this.shapes.forEach( shape => { shape.fullySelected = false });
             }
         }
-        
     }
 };
 </script>

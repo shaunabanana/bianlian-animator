@@ -50,7 +50,7 @@
 
         <v-menu offset-y>
             <template v-slot:activator="{ on, attrs }">
-                <v-btn text v-bind="attrs" v-on="on"> Face </v-btn>
+                <v-btn text v-bind="attrs" v-on="on"> Keyframe </v-btn>
             </template>
             <v-list dense>
                 <v-list-item @click="newProject">

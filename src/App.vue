@@ -3,14 +3,19 @@
         <app-bar :name="name" @new-project="newProject"/>
 
         <v-main>
-            <timeliner
+            <timeline ref="timeline"
                 :layers="layers"
                 @update="updateTime"
+                @key="addKeyframe"
+                @rekey="updateKeyframe"
+                @unkey="deleteKeyframe"
             />
-            <editor-canvas
+            <editor-canvas ref="editor"
                 :width="width"
                 :height="height"
                 :layers="layers"
+                :background="background"
+                @update="updateShape"
             />
         </v-main>
     </v-app>
@@ -18,17 +23,18 @@
 
 <script>
 import AppBar from "./components/AppBar.vue";
-import Timeliner from "./components/Timeliner.vue";
+import Timeline from "./components/Timeline.vue";
 import EditorCanvas from "./components/EditorCanvas.vue";
 
 import { parse } from 'svgson';
+import toPath from "element-to-path";
 
 export default {
     name: "App",
 
     components: {
         AppBar,
-        Timeliner,
+        Timeline,
         EditorCanvas,
     },
 
@@ -38,6 +44,7 @@ export default {
         name: "Untitled",
         layers: [],
         timeliner: {},
+        background: "gray",
     }),
 
     mounted() {},
@@ -67,14 +74,25 @@ export default {
                 const groupElements = svg.children.filter( node => node.name === 'g' );
                 if (groupElements.length > 0) {
                     if (groupElements[0].children.length > 0) {
-                        groupElements[0].children.forEach((node, index) => {
-                            const name = `Shape ${index}`;
-                            this.layers.push({
-                                name: name,
-                                keys: [],
-                                time: null,
-                                shape: node
-                            });
+                        let index = 1;
+                        groupElements[0].children.forEach((node) => {
+
+                            console.log(node);
+                            if (node.name === 'rect' && !node.attributes.id) {
+                                if (node.attributes.fill) {
+                                    this.background = node.attributes.fill;
+                                }
+                            } else {
+                                let name = `Shape ${index}`;
+                                index ++;
+                                this.layers.push({
+                                    name: name,
+                                    keys: [],
+                                    time: null,
+                                    attributes: node.attributes,
+                                    shape: toPath(node)
+                                });
+                            }
                         });
                     }
                 }
@@ -82,12 +100,36 @@ export default {
             console.log(this.layers);
         },
 
-
         updateTime (time) {
             console.log(time);
             time.forEach( (data, index) => {
                 this.layers[index].time = data
             })
+            this.$refs.editor.draw();
+        },
+
+        updateShape (layerId, data) {
+            console.log("Updating layer shape", layerId, data);
+            // Let timeline add a keyframe here.
+            this.$refs.timeline.key(layerId);
+        },
+
+        addKeyframe (layerId, index) {
+            const shape = this.$refs.editor.getLayerShape(layerId);
+            this.layers[layerId].keys.splice(index, 0, shape.pathData);
+            console.log(this.layers[layerId]);
+        },
+
+        updateKeyframe (layerId, index) {
+            console.log('Updating keyframe', layerId, index);
+            const shape = this.$refs.editor.getLayerShape(layerId);
+            this.layers[layerId].keys[index] = shape.pathData;
+            console.log(this.layers[layerId]);
+        },
+
+        deleteKeyframe (layerId, index) {
+            this.layers[layerId].keys.splice(index, 1);
+            console.log(this.layers[layerId]);
         }
     },
 };
