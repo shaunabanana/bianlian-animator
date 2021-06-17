@@ -1,4 +1,13 @@
-# bianlian-animator
+# Bianlian Animator
+_Bianlian_ (变脸) is a set of animation player/maker for creating **dynamic, smooth, expressive robot faces**. 
+
+This repository, _Bianlian Animator_, is a curve-based animation editor.
+
+## Usage
+First, Create a base face shape and export as SVG, preferably using Sketch. 
+
+**IMPORTANT: The SVG must be flat, meaning no groups can be used. An example:**
+
 
 ## Project setup
 ```
