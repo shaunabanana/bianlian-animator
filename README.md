@@ -8,6 +8,13 @@ First, Create a base face shape and export as SVG, preferably using Sketch.
 
 **IMPORTANT: The SVG must be flat, meaning no groups can be used. An example:**
 
+![Example](./assets/svg-exmaple.png)
+
+For every animation, choose Animation > New. Select the base face SVG.
+
+Create keyframe animations as you would in AE.
+
+Don't forget to save!
 
 ## Project setup
 ```
