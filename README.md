@@ -6,9 +6,11 @@ This repository, _Bianlian Animator_, is a curve-based animation editor.
 ## Usage
 First, Create a base face shape and export as SVG, preferably using Sketch. 
 
-**IMPORTANT: The SVG must be flat, meaning no groups can be used. An example:**
+**IMPORTANT: The SVG must be flat, meaning no groups can be used. Every element must be directly under the root.**
 
-![Example](./assets/svg-exmaple.png)
+An example:
+
+<img src="https://github.com/shaunabanana/bianlian-animator/raw/master/assets/svg-example.png" width="400px" />
 
 For every animation, choose Animation > New. Select the base face SVG.
 
